@@ -16,7 +16,7 @@ def get_molecule_stoichiometry(molecule: str):
     return d
 
 
-class Composition:
+class AbstractComposition:
 
     def __init__(self):
         self.periodic_table = pd.read_csv("data/periodic_table.csv", index_col=0)
@@ -31,3 +31,6 @@ class Composition:
         for element in stoich:
             mass += stoich[element] * self.periodic_table.loc[element, 'atomic_mass']
         return mass
+
+class Composition(AbstractComposition):
+    pass
