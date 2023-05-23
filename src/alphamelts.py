@@ -1,5 +1,7 @@
 import os
+import time
 from subprocess import Popen, PIPE, TimeoutExpired
+from time import sleep
 import timeit
 
 
@@ -8,13 +10,17 @@ class AlphaMELTS:
     Controller class for AlphaMELTS subprocessing
     """
 
-    def __init__(self, alphamelts_path: str):
+    def __init__(self, alphamelts_path: str, perl_path: str):
         self.alphamelts_path = alphamelts_path
         if not self.alphamelts_path.endswith('/'):
             self.alphamelts_path += '/'
         self.alphamelts_package_path = self.alphamelts_path + 'package/'
         self.alphamelts_command_path = self.alphamelts_package_path + 'run-alphamelts.command'
+        self.perl_path = perl_path
         self.alphamelts = None
+
+    # def install_alphamelts(self):
+    #     return Popen([self.perl_path, self.alphamelts_package_path + "install2.command"], stdin=PIPE)
 
     def __open_alphamelts(self, env_file: str):
         """
@@ -22,8 +28,7 @@ class AlphaMELTS:
         """
         if self.alphamelts is not None:
             raise Exception("AlphaMELTS is already running.")
-        self.alphamelts = Popen([self.alphamelts_command_path, "-f", env_file], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                                universal_newlines=True)
+        self.alphamelts = Popen([self.perl_path, self.alphamelts_command_path, "-f", env_file], stdin=PIPE)
         return self.alphamelts
 
     def send_commands(self, commands: list):
@@ -32,13 +37,18 @@ class AlphaMELTS:
         """
         if self.alphamelts is None:
             raise Exception("AlphaMELTS is not running.")
-        self.alphamelts.communicate(input='\n'.join([b"{c}" for c in commands]))
+        # convert all commands into bytes
+        commands = [bytes(str(c), 'utf-8') for c in commands]
+        self.alphamelts.communicate(input=b'\n'.join(commands))
 
-    def run_alphamelts(self, commands: list):
+    def run_alphamelts(self, commands: list, env_file_path: str):
         """
         Main function for running AlphaMELTS.
         Timeout: https://stackoverflow.com/questions/62379807/how-to-kill-a-subprocess-after-50-seconds
         """
+        self.__open_alphamelts(env_file_path)
+        self.send_commands(commands)
+
 
     def write_environment_file(self, settings: dict, fname: str = 'environment.txt'):
         """
@@ -54,3 +64,4 @@ class AlphaMELTS:
             for key, value in settings.items():
                 f.write(f'{key}\t{value}\n')
         f.close()
+        return self.alphamelts_package_path + fname
