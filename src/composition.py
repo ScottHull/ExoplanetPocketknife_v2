@@ -123,3 +123,18 @@ class Composition(AbstractComposition):
         setting: value, setting: value, ...
         """
         self._write_melts_file(self.elements_wt_pct_to_oxide_wt_pct(), title, settings, path)
+
+    def adjust_mass(self, element: str, amount: float, method="subtraction"):
+        """
+        Adjust the mass of an element b
+        """
+        if method == "subtraction":
+            self.elements[element] -= amount
+        elif method == "addition":
+            self.elements[element] += amount
+        elif method == "multiplication":
+            self.elements[element] *= amount
+        else:
+            raise ValueError("Invalid method. Choose between subtraction, addition, and multiplication.")
+        self.elements = normalize(self.elements)
+        return self.elements

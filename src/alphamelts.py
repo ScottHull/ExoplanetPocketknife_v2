@@ -14,21 +14,26 @@ class AlphaMELTS:
         self.alphamelts_path = alphamelts_path
         if not self.alphamelts_path.endswith('/'):
             self.alphamelts_path += '/'
+        self.alphamelts_script = 'run-alphamelts.command'
         self.alphamelts_package_path = self.alphamelts_path + 'package/'
-        self.alphamelts_command_path = self.alphamelts_package_path + 'run-alphamelts.command'
+        self.alphamelts_command_path = self.alphamelts_package_path + self.alphamelts_script
         self.perl_path = perl_path
         self.alphamelts = None
 
     # def install_alphamelts(self):
     #     return Popen([self.perl_path, self.alphamelts_package_path + "install2.command"], stdin=PIPE)
 
-    def __open_alphamelts(self, env_file: str):
+    def __open_alphamelts(self, env_file=""):
         """
         Open AlphaMELTS in a subprocess.
         """
         if self.alphamelts is not None:
             raise Exception("AlphaMELTS is already running.")
-        self.alphamelts = Popen([self.perl_path, self.alphamelts_command_path, "-f", env_file], stdin=PIPE)
+        popen = [self.perl_path, self.alphamelts_script]
+        if env_file != "":
+            popen += ["-f", env_file]
+
+        self.alphamelts = Popen(popen, stdin=PIPE)
         return self.alphamelts
 
     def send_commands(self, commands: list):
