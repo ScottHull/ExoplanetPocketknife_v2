@@ -36,11 +36,16 @@ bsp_settings = {
     'Mode': "Fractionate Solids",
 }
 
-alphaMELTS = AlphaMELTS(
-    # alphamelts_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master",
-    # perl_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master\strawberry-perl-5.32.1.1-64bit-portable\perl\bin\perl.exe"
-    alphamelts_path="/Users/scotthull/Documents - Scott’s MacBook Pro/alphaMELTS2-master"
-)
+# if operating system is windows
+if os.name == 'nt':
+    alphaMELTS = AlphaMELTS(
+        alphamelts_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master",
+        perl_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master\strawberry-perl-5.32.1.1-64bit-portable\perl\bin\perl.exe"
+    )
+else:
+    alphaMELTS = AlphaMELTS(
+        alphamelts_path="/Users/scotthull/Documents - Scott’s MacBook Pro/alphaMELTS2-master"
+    )
 
 # change working directory to alphamelts package or else it won't work
 os.chdir(alphaMELTS.alphamelts_package_path)
@@ -48,7 +53,7 @@ os.chdir(alphaMELTS.alphamelts_package_path)
 bsp_file = alphaMELTS.write_environment_file(
     settings={
         "ALPHAMELTS_CALC_MODE": "MELTS",
-        # "ALPHAMELTS_VERSION": "pMELTS",
+        "ALPHAMELTS_VERSION": "MELTS",
         "ALPHAMELTS_MODE": "isobaric",
         "ALPHAMELTS_MAXT": 3000,
         "ALPHAMELTS_DELTAT": delta_T,
@@ -69,8 +74,8 @@ commands = []
 commands += [1, title + ".melts"]
 # set fO2
 commands += [5, fO2_buffer, 7, fO2_offset, 'x']
-# adjust min and max temperature
-# commands += [2, 1, max_temperature, 2, min_temperature, 'x']
+# suppress alloy-liquid
+commands += [8, 'alloy-liquid', 0, 'x']
 # execute
 commands += [4, 1, 0]
 
