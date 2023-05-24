@@ -10,7 +10,7 @@ class AlphaMELTS:
     Controller class for AlphaMELTS subprocessing
     """
 
-    def __init__(self, alphamelts_path: str, perl_path: str):
+    def __init__(self, alphamelts_path: str, perl_path=None):
         self.alphamelts_path = alphamelts_path
         if not self.alphamelts_path.endswith('/'):
             self.alphamelts_path += '/'
@@ -29,7 +29,11 @@ class AlphaMELTS:
         """
         if self.alphamelts is not None:
             raise Exception("AlphaMELTS is already running.")
-        popen = [self.perl_path, self.alphamelts_script]
+        popen = [self.alphamelts_command_path]
+        # if a Windows OS, prepend the perl path
+        if os.name == 'nt':
+            popen = [self.perl_path] + popen
+        # if an environment file is specified, add it to the command
         if env_file != "":
             popen += ["-f", env_file]
 

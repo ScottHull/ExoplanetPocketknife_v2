@@ -21,7 +21,7 @@ BULK_EARTH = Composition({
 title = "earth"
 fO2_buffer = 5
 fO2_offset = -1.4
-max_temperature = 1400
+max_temperature = 2500
 min_temperature = 1000
 delta_T = -10
 
@@ -37,8 +37,9 @@ bsp_settings = {
 }
 
 alphaMELTS = AlphaMELTS(
-    alphamelts_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master",
-    perl_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master\strawberry-perl-5.32.1.1-64bit-portable\perl\bin\perl.exe"
+    # alphamelts_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master",
+    # perl_path=r"C:\Users\Scott\OneDrive\Desktop\alphaMELTS2-master\alphaMELTS2-master\strawberry-perl-5.32.1.1-64bit-portable\perl\bin\perl.exe"
+    alphamelts_path="/Users/scotthull/Documents - Scott’s MacBook Pro/alphaMELTS2-master"
 )
 
 # change working directory to alphamelts package or else it won't work
@@ -71,7 +72,7 @@ commands += [5, fO2_buffer, 7, fO2_offset, 'x']
 # adjust min and max temperature
 # commands += [2, 1, max_temperature, 2, min_temperature, 'x']
 # execute
-commands += [3, 1]
+commands += [4, 1, 0]
 
 alphaMELTS.run_alphamelts(
     commands=commands,
