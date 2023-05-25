@@ -1,8 +1,7 @@
 import os
+import csv
 import time
 from subprocess import Popen, PIPE, TimeoutExpired
-from time import sleep
-import timeit
 
 
 class AlphaMELTS:
@@ -10,7 +9,7 @@ class AlphaMELTS:
     Controller class for AlphaMELTS subprocessing
     """
 
-    def __init__(self, alphamelts_path: str, perl_path=None):
+    def __init__(self, alphamelts_path: str, perl_path=None, verbose=True):
         self.alphamelts_path = alphamelts_path
         if not self.alphamelts_path.endswith('/'):
             self.alphamelts_path += '/'
@@ -19,9 +18,21 @@ class AlphaMELTS:
         self.alphamelts_command_path = self.alphamelts_package_path + self.alphamelts_script
         self.perl_path = perl_path
         self.alphamelts = None
+        self.verbose = verbose
+        self.output = None
 
     # def install_alphamelts(self):
     #     return Popen([self.perl_path, self.alphamelts_package_path + "install2.command"], stdin=PIPE)
+
+    def read_output(self, output_path: str):
+        """
+        Read in the
+        """
+        return csv.reader(open(output_path, 'r'))
+
+    def fprint(self, *args):
+        if self.verbose:
+            print(*args)
 
     def __open_alphamelts(self, env_file=""):
         """
@@ -74,3 +85,28 @@ class AlphaMELTS:
                 f.write(f'{key}\t{value}\n')
         f.close()
         return self.alphamelts_package_path + fname
+
+    def get_phase_mass(self, phase: str, output_path: str, row_header="Phase"):
+        """
+        Gets the mass of a phase from the AlphaMELTS output.
+        """
+        reader = self.read_output(output_path=output_path)
+        found_row = False
+        phase_index = None
+        mass = 0
+        for row in reader:
+            if found_row:
+                if len(row) == 0:
+                    break
+                else:
+                    mass += float(row[phase_index])
+            else:
+                if len(row) > 0:
+                    if row[0] == row_header:
+                        row = next(reader)
+                        # get the row index of the phase
+                        phase_index = row.index(phase)
+                        found_row = True
+        self.fprint(f"Mass of {phase}: {mass}")
+        return mass
+

@@ -101,6 +101,7 @@ class Composition(AbstractComposition):
     def __init__(self, elements: dict):
         super().__init__()
         self.elements = normalize(elements)  # elements given as wt%
+        self.file = None
 
     def elements_wt_pct_to_oxide_wt_pct(self):
         """

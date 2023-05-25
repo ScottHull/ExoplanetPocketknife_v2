@@ -47,6 +47,8 @@ else:
         alphamelts_path="/Users/scotthull/Documents - Scott’s MacBook Pro/alphaMELTS2-master"
     )
 
+# save current working directory
+cwd = os.getcwd()
 # change working directory to alphamelts package or else it won't work
 os.chdir(alphaMELTS.alphamelts_package_path)
 
@@ -79,7 +81,17 @@ commands += [8, 'alloy-liquid', 0, 'x']
 # execute
 commands += [4, 1, 0]
 
-alphaMELTS.run_alphamelts(
-    commands=commands,
-    env_file_path=bsp_file,
-)
+# alphaMELTS.run_alphamelts(
+#     commands=commands,
+#     env_file_path=bsp_file,
+# )
+
+# change back to original working directory
+os.chdir(cwd)
+
+print(BULK_EARTH.elements_wt_pct_to_oxide_wt_pct())
+f = 'test/Earth_BSP_Output.csv'
+mass_alloy = alphaMELTS.get_phase_mass(output_path=f, phase="alloy-solid_0")
+BULK_EARTH.adjust_mass(element='Fe', amount=mass_alloy, method='subtraction')
+print(BULK_EARTH.elements_wt_pct_to_oxide_wt_pct())
+
