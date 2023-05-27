@@ -89,9 +89,5 @@ commands += [4, 1, 0]
 # change back to original working directory
 os.chdir(cwd)
 
-print(BULK_EARTH.elements_wt_pct_to_oxide_wt_pct())
-f = 'test/Earth_BSP_Output.csv'
-mass_alloy = alphaMELTS.get_phase_mass(output_path=f, phase="alloy-solid_0")
-BULK_EARTH.adjust_mass(element='Fe', amount=mass_alloy, method='subtraction')
-print(BULK_EARTH.elements_wt_pct_to_oxide_wt_pct())
+
 

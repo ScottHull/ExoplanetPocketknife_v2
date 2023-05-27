@@ -32,9 +32,14 @@ def normalize(composition: dict, per_100=True):
 
 class AbstractComposition:
 
-    def __init__(self):
+    def __init__(self, verbose=True):
         self.periodic_table = pd.read_csv("data/periodic_table.csv", index_col=0)
         self.oxides = pd.read_csv("data/oxides.csv", index_col=0)
+        self.verbose = verbose
+
+    def fprint(self, *args):
+        if self.verbose:
+            print(*args)
 
     def get_molecule_mass(self, molecule: str):
         """
@@ -74,12 +79,7 @@ class AbstractComposition:
             for setting in settings:
                 f.write(f"{setting}: {settings[setting]}\n")
         f.close()
-
-    def element_wt_to_moles(self, element: str, mass: float):
-        """
-        Given an element in absolute mass, return the moles of the element.
-        """
-        return mass / self.periodic_table.loc[element, 'atomic_mass']
+        self.fprint("Wrote MELTS file to", path + f"{title}.melts")
 
     def element_moles_to_oxide_moles(self, element: str, moles: float):
         """
@@ -89,19 +89,31 @@ class AbstractComposition:
         oxide_stoich = get_molecule_stoichiometry(corresponding_oxide)
         return moles / oxide_stoich[element]
 
-    def oxide_moles_to_oxide_mass(self, oxide: str, moles: float):
+    def mass_to_moles(self, species: str, mass: float):
+        """
+        Given a species in absolute mass, return its moles.
+        """
+        return mass / self.get_molecule_mass(species)
+
+    def moles_to_mass(self, species: str, moles: float):
         """
         Given an oxide in moles, return its mass.
         """
-        return moles * self.get_molecule_mass(oxide)
+        return moles * self.get_molecule_mass(species)
 
 
 class Composition(AbstractComposition):
 
     def __init__(self, elements: dict):
+        """
+        We need to "add in" oxygen, so we first need to convert to oxide wt.%, and then convert back to element wt.%.
+        """
         super().__init__()
         self.elements = normalize(elements)  # elements given as wt%
+        self.oxides = self.elements_wt_pct_to_oxide_wt_pct()  # oxides given as wt%
+        self.elements = self.oxide_wt_pct_to_element_mass()  # elements given as absolute mass
         self.file = None
+        self.fprint("Created composition:", self.oxides)
 
     def elements_wt_pct_to_oxide_wt_pct(self):
         """
@@ -109,11 +121,24 @@ class Composition(AbstractComposition):
         """
         oxide_wt_pct = {self.get_corresponding_oxide(element): None for element in self.elements}
         for element in self.elements:
-            element_wt = self.element_wt_to_moles(element, self.elements[element])
+            element_wt = self.mass_to_moles(element, self.elements[element])
             oxide_moles = self.element_moles_to_oxide_moles(element, element_wt)
-            oxide_wt = self.oxide_moles_to_oxide_mass(self.oxides.loc[element, 'oxide'], oxide_moles)
+            oxide_wt = self.moles_to_mass(self.oxides.loc[element, 'oxide'], oxide_moles)
             oxide_wt_pct[self.get_corresponding_oxide(element)] = oxide_wt
         return normalize(oxide_wt_pct)
+
+    def oxide_wt_pct_to_element_mass(self):
+        """
+        Takes a dictionary of oxides in wt% and returns a dictionary of elements in absolute mass.
+        """
+        element_mass = {self.oxides.loc[oxide, 'element']: None for oxide in self.oxides}
+        for oxide in self.oxides:
+            stoich = get_molecule_stoichiometry(oxide)
+            element = self.oxides.loc[oxide, 'element']
+            oxide_moles = self.mass_to_moles(oxide, self.oxides[oxide])
+            element_moles = oxide_moles * stoich[element]
+            element_mass[element] = self.moles_to_mass(element, element_moles)
+        return element_mass
 
     def write_melts_file(self, title: str, settings: dict, path=""):
         """
