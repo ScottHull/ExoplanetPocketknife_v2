@@ -8,6 +8,7 @@ from src.composition import Composition
     1. alphaMELTS2 may not support bulk planet abundances...perhaps just subtract 33wt% Fe from each composition?
 """
 
+# =================== DEFINE THE COMPOSITIONS ===================
 BULK_EARTH = Composition({
     'Si': 16.1,
     'Mg': 15.4,
@@ -18,13 +19,15 @@ BULK_EARTH = Composition({
     'Na': 0.18,
 })  # McDonough 2003 Table 3
 
+# =================== DEFINE THE SETTINGS ===================
+
 title = "earth"
 fO2_buffer = 5
 fO2_offset = -1.4
 max_temperature = 2500
 min_temperature = 1000
 delta_T = -10
-
+core_fe_mass = 25.283758
 
 bsp_settings = {
     'Increment Temperature': delta_T,
@@ -35,6 +38,18 @@ bsp_settings = {
     'dp/dt': 0,
     'Mode': "Fractionate Solids",
 }
+
+morb_settings = {
+    'Increment Temperature': delta_T,
+    'Initial Temperature': max_temperature,
+    'Final Temperature': min_temperature,
+    'Initial Pressure': 4200,
+    'Final Pressure': 4200,
+    'dp/dt': 0,
+    'Mode': "Fractionate Solids",
+}
+
+# =================== INITIATE MELTS ===================
 
 # if operating system is windows
 if os.name == 'nt':
@@ -51,6 +66,8 @@ else:
 cwd = os.getcwd()
 # change working directory to alphamelts package or else it won't work
 os.chdir(alphaMELTS.alphamelts_package_path)
+
+# =================== WRITE THE MELTS FILES ===================
 
 bsp_file = alphaMELTS.write_environment_file(
     settings={
@@ -70,6 +87,8 @@ bsp_file = alphaMELTS.write_environment_file(
 
 BULK_EARTH.write_melts_file(title=title, settings=bsp_settings, path=alphaMELTS.alphamelts_package_path)
 
+# =================== DEFINE MELTS COMMANDS ===================
+
 # format alphaMELTS commands
 commands = []
 # read in the melts file
@@ -81,6 +100,8 @@ commands += [8, 'alloy-liquid', 0, 'x']
 # execute
 commands += [4, 1, 0]
 
+# =================== RUN ALPHAMELTS ===================
+
 # alphaMELTS.run_alphamelts(
 #     commands=commands,
 #     env_file_path=bsp_file,
@@ -88,6 +109,3 @@ commands += [4, 1, 0]
 
 # change back to original working directory
 os.chdir(cwd)
-
-
-

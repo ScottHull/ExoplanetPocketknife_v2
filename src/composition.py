@@ -34,7 +34,7 @@ class AbstractComposition:
 
     def __init__(self, verbose=True):
         self.periodic_table = pd.read_csv("data/periodic_table.csv", index_col=0)
-        self.oxides = pd.read_csv("data/oxides.csv", index_col=0)
+        self.oxide_map = pd.read_csv("data/oxides.csv", index_col=0)
         self.verbose = verbose
 
     def fprint(self, *args):
@@ -56,7 +56,7 @@ class AbstractComposition:
         """
         Gets the corresponding oxide given an element.
         """
-        return self.oxides.loc[element, 'oxide']
+        return self.oxide_map.loc[self.oxide_map.index == element]['oxide'].iloc[0]
 
     def _write_melts_file(self, composition: dict, title: str, settings: dict, path=""):
         """
@@ -114,6 +114,7 @@ class Composition(AbstractComposition):
         self.elements = self.oxide_wt_pct_to_element_mass()  # elements given as absolute mass
         self.file = None
         self.fprint("Created composition:", self.oxides)
+        self.fprint("Element masses:", self.elements)
 
     def elements_wt_pct_to_oxide_wt_pct(self):
         """
@@ -123,7 +124,7 @@ class Composition(AbstractComposition):
         for element in self.elements:
             element_wt = self.mass_to_moles(element, self.elements[element])
             oxide_moles = self.element_moles_to_oxide_moles(element, element_wt)
-            oxide_wt = self.moles_to_mass(self.oxides.loc[element, 'oxide'], oxide_moles)
+            oxide_wt = self.moles_to_mass(self.get_corresponding_oxide(element), oxide_moles)
             oxide_wt_pct[self.get_corresponding_oxide(element)] = oxide_wt
         return normalize(oxide_wt_pct)
 
@@ -131,10 +132,12 @@ class Composition(AbstractComposition):
         """
         Takes a dictionary of oxides in wt% and returns a dictionary of elements in absolute mass.
         """
-        element_mass = {self.oxides.loc[oxide, 'element']: None for oxide in self.oxides}
+        element_mass = {}
         for oxide in self.oxides:
             stoich = get_molecule_stoichiometry(oxide)
-            element = self.oxides.loc[oxide, 'element']
+            element = self.oxide_map.loc[self.oxide_map['oxide'] == oxide].index[0]
+            if element not in element_mass:
+                element_mass[element] = 0
             oxide_moles = self.mass_to_moles(oxide, self.oxides[oxide])
             element_moles = oxide_moles * stoich[element]
             element_mass[element] = self.moles_to_mass(element, element_moles)
